@@ -3,28 +3,14 @@
 # alias for install-jetbrains-toolbox
 [group('Apps')]
 jetbrains-toolbox:
-    @ujust install-jetbrains-toolbox
+  @ujust install-jetbrains-toolbox
 
 # Install JetBrains Toolbox | https://www.jetbrains.com/toolbox-app/
 [group('Apps')]
 install-jetbrains-toolbox:
-    #!/usr/bin/env bash
-    pushd "$(mktemp -d)"
-    echo "Get latest JetBrains Toolbox version"
-    # Get the json with latest releases
-    curl -sSfL -o releases.json "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release"
-    # Extract information
-    BUILD_VERSION=$(jq -r '.TBA[0].build' ./releases.json)
-    DOWNLOAD_LINK=$(jq -r '.TBA[0].downloads.linux.link' ./releases.json)
-    CHECKSUM_LINK=$(jq -r '.TBA[0].downloads.linux.checksumLink' ./releases.json)
-    echo "Installing JetBrains Toolbox ${BUILD_VERSION}"
-    curl -sSfL -O "${DOWNLOAD_LINK}"
-    curl -sSfL "${CHECKSUM_LINK}" | sha256sum -c
-    tar zxf jetbrains-toolbox-"${BUILD_VERSION}".tar.gz
-    mkdir -p $HOME/.local/share/JetBrains/ToolboxApp/
-    mv jetbrains-toolbox-"${BUILD_VERSION}"/* $HOME/.local/share/JetBrains/ToolboxApp/
-    echo "Launching JetBrains Toolbox"
-    $HOME/.local/share/JetBrains/ToolboxApp/bin/jetbrains-toolbox
+  #!/usr/bin/env bash
+  brew tap ublue-os/homebrew-tap
+  brew install --cask jetbrains-toolbox-linux
 
 # Install OpenTabletDriver, an open source, cross-platform, user-mode tablet driver
 [group('Apps')]
@@ -36,26 +22,28 @@ install-opentabletdriver:
     OPTION=$(Choose "Install" "Uninstall" "Exit")
     if [[ "${OPTION,,}" =~ ^install ]]; then
         echo "Installing OpenTabletDriver..."
-        curl -s https://api.github.com/repos/OpenTabletDriver/OpenTabletDriver/releases/latest \
-        | jq -r '.assets | sort_by(.created_at) | .[] | select (.name|test("opentabletdriver.*tar.gz$")) | .browser_download_url' \
-        | wget -qi - -O /tmp/OpenTabletDriver/opentabletdriver.tar.gz && \
-        tar --strip-components=1 -xvzf /tmp/OpenTabletDriver/opentabletdriver.tar.gz -C /tmp/OpenTabletDriver && \
-        pkexec cp /tmp/OpenTabletDriver/etc/udev/rules.d/70-opentabletdriver.rules /etc/udev/rules.d/71-opentabletdriver.rules && \
-        rm -rf /tmp/OpenTabletDriver && \
-        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && \
-        flatpak --system install -y flathub net.opentabletdriver.OpenTabletDriver && \
-        mkdir -p $HOME/.config/OpenTabletDriver && \
-        flatpak override --user --filesystem=xdg-config/OpenTabletDriver net.opentabletdriver.OpenTabletDriver && \
-        mkdir -p $HOME/.config/systemd/user && \
-        curl -s https://raw.githubusercontent.com/flathub/net.opentabletdriver.OpenTabletDriver/refs/heads/master/scripts/opentabletdriver.service > $HOME/.config/systemd/user/opentabletdriver.service  && \
-        systemctl --user daemon-reload && \
+
+        OTD_TMPDIR="$(mktemp -d)"
+
+        curl -s "https://api.github.com/repos/OpenTabletDriver/OpenTabletDriver/releases/latest" \
+          | jq -r '.assets | sort_by(.created_at) | .[] | select (.name|test("opentabletdriver.*tar.gz$")) | .browser_download_url' \
+          | wget -qi - -O - \
+          | tar --strip-components=1 -xvzf - -C "${OTD_TMPDIR}"
+
+        pkexec cp "${OTD_TMPDIR}/etc/udev/rules.d/70-opentabletdriver.rules" /etc/udev/rules.d/71-opentabletdriver.rules && \
+        rm -rf "${OTD_TMPDIR}"
+
+        flatpak --system install -y flathub net.opentabletdriver.OpenTabletDriver
+
+        mkdir -p "$HOME/.config/systemd/user"
+        curl -s "https://raw.githubusercontent.com/flathub/net.opentabletdriver.OpenTabletDriver/refs/heads/master/scripts/opentabletdriver.service" > "$HOME/.config/systemd/user/opentabletdriver.service"
+
+        systemctl --user daemon-reload
         systemctl enable --user --now opentabletdriver.service
     elif [[ "${OPTION,,}" =~ ^uninstall ]]; then
         echo "Uninstalling OpenTabletDriver..."
-        pkexec rm /etc/udev/rules.d/71-opentabletdriver.rules && \
+        sudo rm /etc/udev/rules.d/71-opentabletdriver.rules && \
         flatpak --system remove -y flathub net.opentabletdriver.OpenTabletDriver
-    else
-        echo "Have a good day :)!"
     fi
 
 # Install/update DaVinci Resolve, a closed-source video editing utility
@@ -95,7 +83,7 @@ install-resolve ACTION="":
         echo -e "${b}\033[3mDo not\033[0m ${b}extract the .zip contents, the script will handle everything${n}"
         echo "${lightgrey}TIP: For manual installation, see https://github.com/zelikos/davincibox${n}"
         # Get sure user reads instructions
-        ugum confirm || exit 0
+        gum confirm || exit 0
         # Download davincibox setup script
         SETUPSCRIPT=/tmp/davincibox_setup.sh
         wget -O $SETUPSCRIPT ${SCRIPT_URL}
@@ -120,7 +108,7 @@ install-resolve ACTION="":
         bash <<< "env -C ${tmpdir} $SETUPSCRIPT $RUNFILE"
         echo "davincibox was successfully installed"
       elif [[ "${OPTION,,}" =~ (^uninstall[[:space:]]davincibox) ]]; then
-        ugum confirm "Confirm davincibox uninstall?" || exit 0
+        gum confirm "Confirm davincibox uninstall?" || exit 0
         # Remove the existing container
         if podman container exists davincibox >/dev/null 2>&1; then
           echo "Removing existing davincibox container"

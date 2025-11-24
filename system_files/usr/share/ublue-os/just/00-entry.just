@@ -10,5 +10,5 @@ _default:
 # Imports
 import "/usr/share/ublue-os/just/default.just"
 import "/usr/share/ublue-os/just/update.just"
-import "/usr/share/ublue-os/just/bluefin-apps.just"
-import "/usr/share/ublue-os/just/bluefin-system.just"
+import "/usr/share/ublue-os/just/apps.just"
+import "/usr/share/ublue-os/just/system.just"
