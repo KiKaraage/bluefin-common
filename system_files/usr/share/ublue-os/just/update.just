@@ -35,33 +35,27 @@ alias auto-update := toggle-updates
 # Turn automatic updates on or off
 toggle-updates ACTION="prompt":
     #!/usr/bin/bash
-    CURRENT_STATE="Disabled"
+    CURRENT_STATE="disabled"
     if systemctl is-enabled -q rpm-ostreed-automatic.timer; then
-        CURRENT_STATE="Enabled"
+        CURRENT_STATE="enabled"
     elif systemctl is-enabled -q uupd.timer; then
-        CURRENT_STATE="Enabled"
+        CURRENT_STATE="enabled"
     fi
 
-    OPTION="{{ ACTION }}"
-    if [ "$OPTION" == "prompt" ]; then
-        echo "Automatic updates are currently: ${bold}${CURRENT_STATE}${normal}"
-        echo "Enable or Disable automatic updates?"
-        OPTION="$(gum choose Enable Disable)"
-    elif [ "$OPTION" == "help" ]; then
-        echo "Usage: ujust toggle-updates <option>"
-        echo "  <option>: Specify the quick option - 'enable' or 'disable'"
-        echo "  Use 'enable' to Enable automatic updates."
-        echo "  Use 'disable' to Disable automatic updates."
-        exit 0
-    fi
+    echo "Automatic updates are currently ${CURRENT_STATE}"
+    gum confirm --affirmative="Enable" --negative="Disable" "Toggle automatic updates?"
+    EXIT_CODE="$?"
 
     if systemctl cat -- uupd.timer &> /dev/null; then
         TIMER="uupd.timer"
     else
         TIMER="rpm-ostreed-automatic.timer"
     fi
-
-    sudo systemctl "${OPTION,,}" "$TIMER"
+    if [ "${EXIT_CODE}" == 0 ] ; then
+        sudo systemctl enable "$TIMER"
+    elif [ "${EXIT_CODE}" == 1 ] ; then
+        sudo systemctl disable "$TIMER"
+    fi
 
 alias changelog := changelogs
 
@@ -75,7 +69,7 @@ changelogs:
     # If stable or gts, get changelogs from Github Releases
     if [[ "$TAG" =~ gts$|stable$ ]]; then
         DATE="$(grep -oP "OSTREE_VERSION=.*\d{2}\.\K\d{8}[.0-9]*" /etc/os-release)"
-        CONTENT=$(curl -Ls "https://api.github.com/repos/ublue-os/bluefin/releases" | jq -r ".[] | select(.tag_name==\"${TAG}-${DATE}\") | .body")
+        CONTENT="$(curl -Ls "https://api.github.com/repos/ublue-os/bluefin/releases" | jq -r ".[] | select(.tag_name==\"${TAG}-${DATE}\") | .body")"
     fi
 
     # Display Content with Glow, otherwise fallback to rpm-ostree changelogs (stable-daily/latest/desynced)
