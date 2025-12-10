@@ -1,26 +1,9 @@
 FROM docker.io/library/alpine:latest AS build
 
-COPY --from=ghcr.io/ublue-os/bluefin-wallpapers-gnome:latest / /tmp
+COPY --from=ghcr.io/ublue-os/bluefin-wallpapers-gnome:latest / /out/bluefin/usr/share
 
-RUN sh <<EOF
-set -xeuo pipefail
-mkdir -p /out/bluefin/usr/share/backgrounds /out/bluefin/usr/share/gnome-background-properties
-
-find /tmp -maxdepth 1 -type f -name "[0-9][0-9]-bluefin-*.jxl" \
-  -exec cp {} /out/bluefin/usr/share/backgrounds/ \;
-
-find /tmp -maxdepth 1 -type f -name "[0-9][0-9]-bluefin.xml" \
-  -exec cp {} /out/bluefin/usr/share/backgrounds/ \;
-
-find /tmp/gnome-background-properties/ -maxdepth 1 -type f -name "[0-9][0-9]-bluefin.xml" \
-  -exec cp {} /out/bluefin/usr/share/gnome-background-properties \;
-
-find /tmp -maxdepth 1 -type f -name "xe_*.jxl" \
-  -exec cp {} /out/bluefin/usr/share/backgrounds/ \;
-
-find /tmp/gnome-background-properties/ -maxdepth 1 -type f -name "xe_*.xml" \
-  -exec cp {} /out/bluefin/usr/share/gnome-background-properties \;
-EOF
+RUN mkdir -p /out/bluefin/usr/share/backgrounds/bluefin && \
+  mv /out/bluefin/usr/share/*.jxl /out/bluefin/usr/share/*.xml /out/bluefin/usr/share/backgrounds/bluefin
 
 RUN apk add just
 
