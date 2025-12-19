@@ -29,6 +29,12 @@ clean-system:
     #!/usr/bin/bash
     podman image prune -af
     podman volume prune -f
+
+     if command -v docker >/dev/null 2>&1; then
+        docker image prune -af
+        docker volume prune -f
+    fi
+
     flatpak uninstall --unused
     rpm-ostree cleanup -bm
     if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
