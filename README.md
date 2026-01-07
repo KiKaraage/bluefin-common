@@ -4,19 +4,21 @@ Shared OCI layer containing common configuration files used across all Bluefin v
 
 ## Directory Structure
 
-This repository organizes configuration files into two main directories:
+This repository organizes configuration files into two main directories, these are important:
 
-### `system_files/bluefin/` - Bluefin-Specific Configuration
-Files specific to Bluefin and Bluefin-DX variants:
+### `system_files/bluefin/` - Bluefin Specific Configuration
+Files specific to Bluefin
+
 - GNOME desktop settings and theming
 - Bluefin wallpapers and branding
 - Desktop-specific environment variables
 - GNOME Initial Setup configuration
 
-### `system_files/shared/` - Cross-Variant Configuration
-Files shared across all variants (bluefin, bluefin-lts, distroless):
-- Just recipes for system management
-- Homebrew Brewfiles for application bundles
+### `system_files/shared/` - Shared Configuration
+Files that are Bluefin agnostic, so that other images like [Aurora](https://getaurora.dev) can use them.
+
+- `Just` recipes for system management
+- Brewfiles for application bundles
 - Setup hooks (privileged, system, user)
 - Container policies and security settings
 - MOTD templates and CLI bling
