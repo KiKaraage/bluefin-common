@@ -52,13 +52,14 @@ fi
 
 if command -v mise >/dev/null 2>&1; then
   # Check for Bash
-  if echo "$BLING_SHELL" | grep -q "bash"; then
-    if [ "$MISE_BASH_AUTO_ACTIVATE" != "1" ]; then
+  if [ "${BLING_SHELL}" = "bash" ]; then
+    if [ "$MISE_BASH_AUTO_ACTIVATE" != "0" ]; then
       eval "$(mise activate bash)"
     fi
-  # Check for Zsh
-  elif echo "$BLING_SHELL" | grep -q "zsh"; then
-    if [ "$MISE_ZSH_AUTO_ACTIVATE" != "1" ]; then
+
+    # Check for Zsh
+  elif [ "${BLING_SHELL}" = "zsh" ]; then
+    if [ "$MISE_ZSH_AUTO_ACTIVATE" != "0" ]; then
       eval "$(mise activate zsh)"
     fi
   fi
